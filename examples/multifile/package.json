@@ -1,0 +1,29 @@
+{
+  "name": "sequelize-markup-simple-example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "babel src -d lib"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "glob": "^7.1.2",
+    "sequelize": "^4.4.2",
+    "sequelize-markup": "^1.0.0",
+    "sqlite3": "^3.1.9"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-preset-env": "^1.5.1"
+  },
+  "babel": {
+    "plugins": [
+      "sequelize-markup"
+    ],
+    "presets": [
+      "env"
+    ]
+  }
+}
