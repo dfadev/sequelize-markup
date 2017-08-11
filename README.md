@@ -15,37 +15,37 @@ This is a Babel plugin that transpiles ident aware markup into a [Sequelize](htt
 // configure sequelize
 var db = SQLZINIT>
     // sequelize configuration options
-	(config)
-	    // "development" db environment
-		(development(dialect="sqlite"))
-			(storage="./db.development.sqlite")
-		// "test" db environment
-		(test)
-			(dialect="sqlite")
-	// execution environment
-	(environment="development")
+  (config)
+      // "development" db environment
+    (development(dialect="sqlite"))
+      (storage="./db.development.sqlite")
+    // "test" db environment
+    (test)
+      (dialect="sqlite")
+  // execution environment
+  (environment="development")
 
 // configure models
 SQLZ>
-	(User)
-		(name(type=DataTypes.STRING(60)))
-		(...associations)
-			(hasMany.Task)
+  (User)
+    (name(type=DataTypes.STRING(60)))
+    (...associations)
+      (hasMany.Task)
 
-	(Task)
-		(title(type=DataTypes.STRING(255)))
+  (Task)
+    (title(type=DataTypes.STRING(255)))
 
 // configure associations
 SQLZINIT(db)
 
 // create database and insert a record
 db.sequelize.sync({ force: true }).then(() => {
-	db.User.findOrCreate({ 
-		where: { name: 'testuser' }, 
-		defaults: { other: 'ok' } } )
-		.spread( (user, wasCreated) => {
-			console.log(user.get( { plain: true } ));
-		});
+  db.User.findOrCreate({ 
+    where: { name: 'testuser' }, 
+    defaults: { other: 'ok' } } )
+    .spread( (user, wasCreated) => {
+      console.log(user.get( { plain: true } ));
+    });
 });
 ```
 
@@ -55,49 +55,49 @@ db.sequelize.sync({ force: true }).then(() => {
 var db = {};
 
 var Sequelize = require("sequelize"),
-	DataTypes = Sequelize.DataTypes,
-	env = "development",
-	cfg = {
-		development: {
-			dialect: "sqlite",
-			storage: "./db.development.sqlite"
-		},
-		test: {
-			dialect: "sqlite"
-		}
-	}[env],
-	sequelize = new Sequelize(cfg);
+  DataTypes = Sequelize.DataTypes,
+  env = "development",
+  cfg = {
+    development: {
+      dialect: "sqlite",
+      storage: "./db.development.sqlite"
+    },
+    test: {
+      dialect: "sqlite"
+    }
+  }[env],
+  sequelize = new Sequelize(cfg);
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 const User = sequelize.define("User", {
-	name: {
-		type: DataTypes.STRING(60)
-	}
+  name: {
+    type: DataTypes.STRING(60)
+  }
 });
 
 User.associate = sequelize => {
-	User.hasMany(sequelize.models.Task, {});
+  User.hasMany(sequelize.models.Task, {});
 };
 
 const Task = sequelize.define("Task", {
-	title: {
-		type: DataTypes.STRING(255)
-	}
+  title: {
+    type: DataTypes.STRING(255)
+  }
 });
 
 for (let mdl in sequelize.models) {
-	let model = sequelize.models[mdl];
-	db[mdl] = model;
-	if (model.associate) model.associate(sequelize);
+  let model = sequelize.models[mdl];
+  db[mdl] = model;
+  if (model.associate) model.associate(sequelize);
 }
 
 db.sequelize.sync({ force: true }).then(() => {
-	db.User.findOrCreate({
-		where: { name: 'testuser' },
-		defaults: { other: 'ok' } }).spread((user, wasCreated) => {
-			console.log(user.get({ plain: true }));
-		});
+  db.User.findOrCreate({
+    where: { name: 'testuser' },
+    defaults: { other: 'ok' } }).spread((user, wasCreated) => {
+      console.log(user.get({ plain: true }));
+    });
 });
 ```
 
@@ -108,14 +108,14 @@ var path = require("path");
 
 // configure sequelize and import models
 var db = SQLZINIT>
-	// path to configuration file
-	(config=path.join(__dirname, "..", "..", "config", "config.json"))
-	// execution environment
-	(environment=process.env.NODE_ENV || "development")
-	// optional database URL
-	(url=process.env.DATABASE_URL)
-	// model files glob
-	(models=path.join(__dirname, "**/!(index).js"))
+  // path to configuration file
+  (config=path.join(__dirname, "..", "..", "config", "config.json"))
+  // execution environment
+  (environment=process.env.NODE_ENV || "development")
+  // optional database URL
+  (url=process.env.DATABASE_URL)
+  // model files glob
+  (models=path.join(__dirname, "**/!(index).js"))
 
 // configure associations
 SQLZINIT(db);
@@ -126,20 +126,20 @@ module.exports = db;
 ###### src/db/user.js:
 ```javascript
 export default function(sequelize, DataTypes) {
-	SQLZ>
-		(User)
-			(name(type=DataTypes.STRING(60)))
-			(...associations)
-				(hasMany.Task)
+  SQLZ>
+    (User)
+      (name(type=DataTypes.STRING(60)))
+      (...associations)
+        (hasMany.Task)
 }
 ```
 
 ###### src/db/task.js:
 ```javascript
 export default function(sequelize, DataTypes) {
-	SQLZ>
-		(Task)
-			(title(type=DataTypes.STRING(255)))
+  SQLZ>
+    (Task)
+      (title(type=DataTypes.STRING(255)))
 }
 ```
 
@@ -149,12 +149,12 @@ var path = require('path');
 var db = require(path.join(__dirname, 'db'));
 
 db.sequelize.sync({ force: true }).then(() => {
-	db.User.findOrCreate({ 
-		where: { name: 'testuser' }, 
-		defaults: { other: 'ok' } } )
-		.spread( (user, wasCreated) => {
-			console.log(user.get( { plain: true } ));
-		});
+  db.User.findOrCreate({ 
+    where: { name: 'testuser' }, 
+    defaults: { other: 'ok' } } )
+    .spread( (user, wasCreated) => {
+      console.log(user.get( { plain: true } ));
+    });
 });
 ```
 
@@ -175,7 +175,7 @@ db.sequelize.sync({ force: true }).then(() => {
     "database": "database_production",
     "host": "127.0.0.1",
     "dialect": "mysql",
-		"logging": false
+    "logging": false
   }
 }
 ```
@@ -188,15 +188,15 @@ var path = require("path");
 var db = {};
 
 var Sequelize = require("sequelize"),
-	DataTypes = Sequelize.DataTypes,
-	env = process.env.NODE_ENV || "development",
-	dbUrl = process.env.DATABASE_URL,
-	cfgFile = path.join(__dirname, "..", "..", "config", "config.json"),
-	cfg = require(cfgFile)[env],
-	sequelize = dbUrl ? new Sequelize(dbUrl, cfg) : new Sequelize(cfg),
-	glob = require("glob"),
-	modelGlob = path.join(__dirname, "**/!(index).js"),
-	files = glob.sync(modelGlob);
+  DataTypes = Sequelize.DataTypes,
+  env = process.env.NODE_ENV || "development",
+  dbUrl = process.env.DATABASE_URL,
+  cfgFile = path.join(__dirname, "..", "..", "config", "config.json"),
+  cfg = require(cfgFile)[env],
+  sequelize = dbUrl ? new Sequelize(dbUrl, cfg) : new Sequelize(cfg),
+  glob = require("glob"),
+  modelGlob = path.join(__dirname, "**/!(index).js"),
+  files = glob.sync(modelGlob);
 
 for (let i = 0; i < files.length; i++) sequelize.import(files[i]);
 
@@ -204,9 +204,9 @@ db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
 for (let mdl in sequelize.models) {
-	let model = sequelize.models[mdl];
-	db[mdl] = model;
-	if (model.associate) model.associate(sequelize);
+  let model = sequelize.models[mdl];
+  db[mdl] = model;
+  if (model.associate) model.associate(sequelize);
 }
 
 module.exports = db;
@@ -215,25 +215,25 @@ module.exports = db;
 ###### src/db/user.js:
 ```javascript
 export default function (sequelize, DataTypes) {
-	const User = sequelize.define("User", {
-		name: {
-			type: DataTypes.STRING(60)
-		}
-	});
+  const User = sequelize.define("User", {
+    name: {
+      type: DataTypes.STRING(60)
+    }
+  });
 
-	User.associate = sequelize => {
-		User.hasMany(sequelize.models.Task, {});
-	};
+  User.associate = sequelize => {
+    User.hasMany(sequelize.models.Task, {});
+  };
 }
 ```
 ###### src/db/task.js:
 ```javascript
 export default function (sequelize, DataTypes) {
-	const Task = sequelize.define("Task", {
-		title: {
-			type: DataTypes.STRING(255)
-		}
-	});
+  const Task = sequelize.define("Task", {
+    title: {
+      type: DataTypes.STRING(255)
+    }
+  });
 }
 ```
 
@@ -246,28 +246,28 @@ The `SQLZINIT>` directive is used to declare a Sequelize configuration.  Indente
 ###### Example:
 ```javascript
 var db = SQLZINIT>
-	// path to configuration file
-	(config=path.join(__dirname, "..", "..", "config", "config.json"))
-	// execution environment
-	(environment=process.env.NODE_ENV || "development")
-	// optional database URL
-	(url=process.env.DATABASE_URL)
-	// optional model files glob
-	(models=path.join(__dirname, "**/!(index).js"))
+  // path to configuration file
+  (config=path.join(__dirname, "..", "..", "config", "config.json"))
+  // execution environment
+  (environment=process.env.NODE_ENV || "development")
+  // optional database URL
+  (url=process.env.DATABASE_URL)
+  // optional model files glob
+  (models=path.join(__dirname, "**/!(index).js"))
 ```
 ###### Transpiles to:
 ```javascript
 var db = {}; 
 var Sequelize = require("sequelize"),
-	DataTypes = Sequelize.DataTypes,
-	env = process.env.NODE_ENV || "development",
-	dbUrl = process.env.DATABASE_URL,
-	cfgFile = path.join(__dirname, "..", "..", "config", "config.json"),
-	cfg = require(cfgFile)[env],
-	sequelize = dbUrl ? new Sequelize(dbUrl, cfg) : new Sequelize(cfg),
-	glob = require("glob"),
-	modelGlob = path.join(__dirname, "**/!(index).js"),
-	files = glob.sync(modelGlob);
+  DataTypes = Sequelize.DataTypes,
+  env = process.env.NODE_ENV || "development",
+  dbUrl = process.env.DATABASE_URL,
+  cfgFile = path.join(__dirname, "..", "..", "config", "config.json"),
+  cfg = require(cfgFile)[env],
+  sequelize = dbUrl ? new Sequelize(dbUrl, cfg) : new Sequelize(cfg),
+  glob = require("glob"),
+  modelGlob = path.join(__dirname, "**/!(index).js"),
+  files = glob.sync(modelGlob);
 
 for (let i = 0; i < files.length; i++) sequelize.import(files[i]);
 
@@ -278,7 +278,7 @@ db.Sequelize = Sequelize;
 #### (environment=*"name"*)
 The `(environment="name")` element specifies which database environment Sequelize should use.  The value is used to select which configuration Sequelize uses.
 ```javascript
-	(environment=process.env.NODE_ENV || "development")
+  (environment=process.env.NODE_ENV || "development")
 ```
 
 #### (config=*"config.json"*)
@@ -301,7 +301,7 @@ Sample config.json file:
     "database": "database_production",
     "host": "127.0.0.1",
     "dialect": "mysql",
-		"logging": false
+    "logging": false
   }
 }
 ```
@@ -312,35 +312,35 @@ To specify the Sequelize configuration inside a source file, use the `(config)` 
 ###### Example:
 ```javascript
 var db = SQLZINIT>
-	// path to configuration file
-	(config)
-	    (development)
-	        (dialect="sqlite")
-	        (storage="./db.development.sqlite")
+  // path to configuration file
+  (config)
+      (development)
+          (dialect="sqlite")
+          (storage="./db.development.sqlite")
         (test(dialect="sqlite", storage=":memory:"))
             (logging=false)
-	// execution environment
-	(environment=process.env.NODE_ENV || "development")
+  // execution environment
+  (environment=process.env.NODE_ENV || "development")
 ```
 ###### Transpiles to:
 ```javascript
 var db = {};
 
 var Sequelize = require("sequelize"),
-	DataTypes = Sequelize.DataTypes,
-	env = process.env.NODE_ENV || "development",
-	cfg = {
-		development: {
-			dialect: "sqlite",
-			storage: "./db.development.sqlite"
-		},
-		test: {
-			dialect: "sqlite",
-			storage: ":memory:",
-			logging: false
-		}
-	}[env],
-	sequelize = new Sequelize(cfg);
+  DataTypes = Sequelize.DataTypes,
+  env = process.env.NODE_ENV || "development",
+  cfg = {
+    development: {
+      dialect: "sqlite",
+      storage: "./db.development.sqlite"
+    },
+    test: {
+      dialect: "sqlite",
+      storage: ":memory:",
+      logging: false
+    }
+  }[env],
+  sequelize = new Sequelize(cfg);
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
@@ -370,9 +370,9 @@ SQLZINIT(db) // use the variable that SQLZINIT> assigns to.
 ###### Transpiles to:
 ```javascript
 for (var mdl in sequelize.models) {
-	var model = sequelize.models[mdl];
-	db[mdl] = model;
-	if (model.associate) model.associate(sequelize);
+  var model = sequelize.models[mdl];
+  db[mdl] = model;
+  if (model.associate) model.associate(sequelize);
 }
 ```
 #### SQLZ>
@@ -384,39 +384,39 @@ Root nodes map to database tables.  Child nodes map to either columns or table o
 ###### Example:
 ```javascript
 SQLZ>
-		(Table1)
-			(Column1(type=DataTypes.STRING))
-			(Column2(type=DataTypes.STRING))
-			(...columns) // can also specify columns here
-				(AnotherColumn1(type=DataTypes.STRING))
-			(...name)
-				(singular='tableone')
-				(plural='tableones')
-		(Table2) // multiple tables are allowed
-			(test(type=DataTypes.STRING))
+    (Table1)
+      (Column1(type=DataTypes.STRING))
+      (Column2(type=DataTypes.STRING))
+      (...columns) // can also specify columns here
+        (AnotherColumn1(type=DataTypes.STRING))
+      (...name)
+        (singular='tableone')
+        (plural='tableones')
+    (Table2) // multiple tables are allowed
+      (test(type=DataTypes.STRING))
 ```
 ###### Transpiles to:
 ```javascript
 const Table1 = sequelize.define('Table1', {
-	Column1: {
-		type: DataTypes.STRING
-	},
-	Column2: {
-		type: DataTypes.STRING
-	},
-	AnotherColumn1: {
-		type: DataTypes.STRING
-	}
+  Column1: {
+    type: DataTypes.STRING
+  },
+  Column2: {
+    type: DataTypes.STRING
+  },
+  AnotherColumn1: {
+    type: DataTypes.STRING
+  }
 }, {
-	name: {
-		singular: 'tableone',
-		plural: 'tableones'
-	}
+  name: {
+    singular: 'tableone',
+    plural: 'tableones'
+  }
 });
 const Table2 = sequelize.define('Table2', {
-	test: {
-		type: DataTypes.STRING
-	}
+  test: {
+    type: DataTypes.STRING
+  }
 });
 ```
 #### (...options)
@@ -425,50 +425,50 @@ The `(...options)` element is used to specify table options.  Table options spec
 ###### Example:
 ```javascript
 SQLZ>
-	(User.timestamps.createdAt.updatedAt.deletedAt(comment='The user table'))
-		(column1.unique(type=DataTypes.BOOLEAN))
-			(onUpdate='CASCADE')
-		(...options)
-			(defaultScope)
-				(where(active=true))
-			(omitNull=false)
-			(paranoid=false)
-			(underscored=false)
-			(underscoredAll=false)
-			(freezeTableName=false)
-			(tableName='users')
-			(schema='public')
-			(engine='MYISAM')
-			(initialAutoIncrement='1')
+  (User.timestamps.createdAt.updatedAt.deletedAt(comment='The user table'))
+    (column1.unique(type=DataTypes.BOOLEAN))
+      (onUpdate='CASCADE')
+    (...options)
+      (defaultScope)
+        (where(active=true))
+      (omitNull=false)
+      (paranoid=false)
+      (underscored=false)
+      (underscoredAll=false)
+      (freezeTableName=false)
+      (tableName='users')
+      (schema='public')
+      (engine='MYISAM')
+      (initialAutoIncrement='1')
 ```
 ###### Transpiles to:
 ```javascript
 const User = sequelize.define('User', {
-	column1: {
-		unique: true,
-		type: DataTypes.BOOLEAN,
-		onUpdate: 'CASCADE'
-	}
+  column1: {
+    unique: true,
+    type: DataTypes.BOOLEAN,
+    onUpdate: 'CASCADE'
+  }
 }, {
-	timestamps: true,
-	createdAt: true,
-	updatedAt: true,
-	deletedAt: true,
-	comment: 'The user table',
-	defaultScope: {
-		where: {
-			active: true
-		}
-	},
-	omitNull: false,
-	paranoid: false,
-	underscored: false,
-	underscoredAll: false,
-	freezeTableName: false,
-	tableName: 'users',
-	schema: 'public',
-	engine: 'MYISAM',
-	initialAutoIncrement: '1'
+  timestamps: true,
+  createdAt: true,
+  updatedAt: true,
+  deletedAt: true,
+  comment: 'The user table',
+  defaultScope: {
+    where: {
+      active: true
+    }
+  },
+  omitNull: false,
+  paranoid: false,
+  underscored: false,
+  underscoredAll: false,
+  freezeTableName: false,
+  tableName: 'users',
+  schema: 'public',
+  engine: 'MYISAM',
+  initialAutoIncrement: '1'
 });
 ```
 
@@ -478,23 +478,23 @@ The `(...name)` element is used to explicitly configure table names.
 ###### Example:
 ```javascript
 SQLZ>
-	(User)
-		(name(type=DataTypes.STRING))
-		(...name)
-			(singular='loginuser')
-			(plural='loginusers')
+  (User)
+    (name(type=DataTypes.STRING))
+    (...name)
+      (singular='loginuser')
+      (plural='loginusers')
 ```
 ###### Transpiles to:
 ```javascript
 const User = sequelize.define('User', {
-	name: {
-		type: DataTypes.STRING
-	}
+  name: {
+    type: DataTypes.STRING
+  }
 }, {
-	name: {
-		singular: 'loginuser',
-		plural: 'loginusers'
-	}
+  name: {
+    singular: 'loginuser',
+    plural: 'loginusers'
+  }
 });
 ```
 #### (...columns)
@@ -503,40 +503,40 @@ The `(...columns)` element allows columns to be declared.  This is mainly for or
 ###### Example:
 ```javascript
 SQLZ>
-	(User)
-		(...columns)
-			(name.unique(type=DataTypes.STRING(60)))
-				(get=() => { return this.getDataValue('name'); })
-				(set=(val) => { this.setDataValue('name', val); })
-				(validate.isAlphanumeric)
-					(notNull(msg='name can\'t be null'))
-					(isEven=(val) => { throw new Error('Bad validation'); })
-					(isNotNull=true)
+  (User)
+    (...columns)
+      (name.unique(type=DataTypes.STRING(60)))
+        (get=() => { return this.getDataValue('name'); })
+        (set=(val) => { this.setDataValue('name', val); })
+        (validate.isAlphanumeric)
+          (notNull(msg='name can\'t be null'))
+          (isEven=(val) => { throw new Error('Bad validation'); })
+          (isNotNull=true)
 ```
 ###### Transpiles to:
 ```javascript
 const User = sequelize.define('User', {
-	name: {
-		unique: true,
-		type: DataTypes.STRING(60),
-		function get() {
-			return this.getDataValue('id');
-		},
-		function set(val) {
-			this.setDataValue('id', val);
-		},
-		validate: {
-			isAlphanumeric: true,
-			isInt: true,
-			notNull: {
-				msg: 'name can\'t be null'
-			},
-			function isEven(val) {
-				throw new Error('Bad validation');
-			},
-			isNotNull: true
-		}
-	}
+  name: {
+    unique: true,
+    type: DataTypes.STRING(60),
+    function get() {
+      return this.getDataValue('id');
+    },
+    function set(val) {
+      this.setDataValue('id', val);
+    },
+    validate: {
+      isAlphanumeric: true,
+      isInt: true,
+      notNull: {
+        msg: 'name can\'t be null'
+      },
+      function isEven(val) {
+        throw new Error('Bad validation');
+      },
+      isNotNull: true
+    }
+  }
 });
 ```
 
@@ -546,28 +546,28 @@ The `(...getters)` element is where custom getters are declared.
 ###### Example:
 ```javascript
 SQLZ>
-	(User)
-		(name(type=DataTypes.STRING(60)))
-		(...getters)
-			(getTwoName=() => { 
-				return this.getDataValue('name') + " " + this.getDataValue('name'); 
-			})
+  (User)
+    (name(type=DataTypes.STRING(60)))
+    (...getters)
+      (getTwoName=() => { 
+        return this.getDataValue('name') + " " + this.getDataValue('name'); 
+      })
 ```
 ###### Transpiles to:
 ```javascript
 const User = sequelize.define('User', {
-	name: {
-		type: DataTypes.STRING(60)
-	}
+  name: {
+    type: DataTypes.STRING(60)
+  }
 }, {
-	getters: {
-		function getTwoName() {
-			return 
-				this.getDataValue('name') + " " +
-				this.getDataValue('name');
-		}
+  getters: {
+    function getTwoName() {
+      return 
+        this.getDataValue('name') + " " +
+        this.getDataValue('name');
+    }
 
-	}
+  }
 });
 ```
 
@@ -576,25 +576,25 @@ The `(...setters)` element is where custom setters are declared.
 ###### Example:
 ```javascript
 SQLZ>
-	(User)
-		(name(type=DataTypes.STRING(60)))
-		(...setters)
-			(setFunName=(val) => { 
-				this.setDataValue('name', 'Fun' + val);
-			})
+  (User)
+    (name(type=DataTypes.STRING(60)))
+    (...setters)
+      (setFunName=(val) => { 
+        this.setDataValue('name', 'Fun' + val);
+      })
 ```
 ###### Transpiles to:
 ```javascript
 const User = sequelize.define('User', {
-	name: {
-		type: DataTypes.STRING(60)
-	}
+  name: {
+    type: DataTypes.STRING(60)
+  }
 }, {
-	setters: {
-		function setFunName(val) {
-			this.setDataValue('name', 'Fun' + val);
-		}
-	}
+  setters: {
+    function setFunName(val) {
+      this.setDataValue('name', 'Fun' + val);
+    }
+  }
 });
 ```
 
@@ -603,27 +603,27 @@ The `(...validate)` element is where custom validations are declared.
 ###### Example:
 ```javascript
 SQLZ>
-	(User)
-		(name(type=DataTypes.STRING(60)))
-		(...validate)
-			(namesAreOk=() => { 
-				if (this.name == "Sam")
-					throw new Error("Invalid name"); 
-			})
+  (User)
+    (name(type=DataTypes.STRING(60)))
+    (...validate)
+      (namesAreOk=() => { 
+        if (this.name == "Sam")
+          throw new Error("Invalid name"); 
+      })
 ```
 ###### Transpiles to:
 ```javascript
 const User = sequelize.define("User", {
-	name: {
-		type: DataTypes.STRING(60)
-	}
+  name: {
+    type: DataTypes.STRING(60)
+  }
 }, {
-	validate: {
-		function namesAreOk() {
-			if (this.name == "Sam")
-			    throw new Error("Invalid name");
-		}
-	}
+  validate: {
+    function namesAreOk() {
+      if (this.name == "Sam")
+          throw new Error("Invalid name");
+    }
+  }
 });
 ```
 
@@ -632,40 +632,40 @@ The `(...indexes)` element is where custom indexes are declared.
 ###### Example:
 ```javascript
 SQLZ>
-	(User)
-		(name(type=DataTypes.STRING(60)))
-		(status(type=DataType.STRING(60)))
-		(...indexes)
-			(user.unique(fields=['name']))
-			(user_status)
-				(unique=false)
-				(fields=['status'])
-				(where)
-					(status='public')
+  (User)
+    (name(type=DataTypes.STRING(60)))
+    (status(type=DataType.STRING(60)))
+    (...indexes)
+      (user.unique(fields=['name']))
+      (user_status)
+        (unique=false)
+        (fields=['status'])
+        (where)
+          (status='public')
 ```
 ###### Transpiles to:
 ```javascript
 const User = sequelize.define('User', {
-	name: {
-		type: DataTypes.STRING(60)
-	},
-	status: {
-		type: DataType.STRING(60)
-	}
+  name: {
+    type: DataTypes.STRING(60)
+  },
+  status: {
+    type: DataType.STRING(60)
+  }
 }, {
-	indexes: {
-		user: {
-			unique: true,
-			fields: ['name']
-		},
-		user_status: {
-			unique: false,
-			fields: ['status'],
-			where: {
-				status: 'public'
-			}
-		}
-	}
+  indexes: {
+    user: {
+      unique: true,
+      fields: ['name']
+    },
+    user_status: {
+      unique: false,
+      fields: ['status'],
+      where: {
+        status: 'public'
+      }
+    }
+  }
 });
 ```
 
@@ -674,27 +674,27 @@ The `(...associations)` element is where table associations are declared.  Note 
 ###### Example:
 ```javascript
 SQLZ>
-	(User)
-		(name(type=DataTypes.STRING(60)))
-		(...associations)
-			(belongsTo.Organization)
-			(belongsToMany.Project(through='UserProject'))
-				(constraints=false)
+  (User)
+    (name(type=DataTypes.STRING(60)))
+    (...associations)
+      (belongsTo.Organization)
+      (belongsToMany.Project(through='UserProject'))
+        (constraints=false)
 ```
 ###### Transpiles to:
 ```javascript
 const User = sequelize.define('User', {
-	name: {
-		type: DataTypes.STRING(60)
-	}
+  name: {
+    type: DataTypes.STRING(60)
+  }
 });
 
 User.associate = sequelize => {
-	User.belongsTo(sequelize.models.Organization, {});
-	User.belongsToMany(sequelize.models.Project, {
-		through: 'UserProject',
-		constraints: false
-	});
+  User.belongsTo(sequelize.models.Organization, {});
+  User.belongsToMany(sequelize.models.Project, {
+    through: 'UserProject',
+    constraints: false
+  });
 };
 ```
 
@@ -703,30 +703,30 @@ The `(...scopes)` element is where custom query scoping is declared.
 ###### Example:
 ```javascript
 SQLZ>
-	(User)
-		(name(type=DataTypes.STRING(60)))
-		(active(type=DataTypes.BOOLEAN))
-		(...scopes)
-			(activeUsers)
-				(where(active=true))
+  (User)
+    (name(type=DataTypes.STRING(60)))
+    (active(type=DataTypes.BOOLEAN))
+    (...scopes)
+      (activeUsers)
+        (where(active=true))
 ```
 ###### Transpiles to:
 ```javascript
 const User = sequelize.define("User", {
-	name: {
-		type: DataTypes.STRING(60)
-	},
-	active: {
-		type: DataTypes.BOOLEAN
-	}
+  name: {
+    type: DataTypes.STRING(60)
+  },
+  active: {
+    type: DataTypes.BOOLEAN
+  }
 }, {
-	scopes: {
-		activeUsers: {
-			where: {
-				active: true
-			}
-		}
-	}
+  scopes: {
+    activeUsers: {
+      where: {
+        active: true
+      }
+    }
+  }
 });
 ```
 
@@ -735,23 +735,22 @@ The `(...hooks)` element is where custom hooks are declared.
 ###### Example:
 ```javascript
 SQLZ>
-	(User)
-		(name(type=DataTypes.STRING(60)))
-		(...hooks)
-			(beforeValidate=(instance, options) => { })
-			(afterValidate=(instance, options) => { })
+  (User)
+    (name(type=DataTypes.STRING(60)))
+    (...hooks)
+      (beforeValidate=(instance, options) => { })
+      (afterValidate=(instance, options) => { })
 ```
 ###### Transpiles to:
 ```javascript
 const User = sequelize.define("User", {
-	name: {
-		type: DataTypes.STRING(60)
-	}
+  name: {
+    type: DataTypes.STRING(60)
+  }
 }, {
-	hooks: {
-		beforeValidate: (instance, options) => {},
-		afterValidate: (instance, options) => {}
-	}
+  hooks: {
+    beforeValidate: (instance, options) => {},
+    afterValidate: (instance, options) => {}
+  }
 });
 ```
-
