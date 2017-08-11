@@ -21,7 +21,7 @@ var db = SQLZINIT>
 			(storage="./db.development.sqlite")
 		// "test" db environment
 		(test)
-		    (dialect="sqlite")
+			(dialect="sqlite")
 	// execution environment
 	(environment="development")
 
@@ -350,14 +350,14 @@ Note that you can specify keys and values as element attributes or child element
 #### (url=*"database URL"*)
 Use the optional `(url="database URL")` element to declare a URL to use when connecting to the database.  This allows for an environment variable to decide which database connection is used.
 ```javascript
-    (url=process.env.DATABASE_URL)
+(url=process.env.DATABASE_URL)
 ```
 
 #### (models=*"glob"*)
 The optional `(models="glob")` element uses the [glob](https://www.npmjs.com/package/glob) package to import models contained in files that recursively match the wildcard pattern.
 ```javascript
-	// model files glob (all but index.js)
-	(models=path.join(__dirname, "**/!(index).js"))
+// model files glob (all but index.js)
+(models=path.join(__dirname, "**/!(index).js"))
 ```
 
 #### SQLZINIT(*db*)
@@ -383,17 +383,17 @@ Root nodes map to database tables.  Child nodes map to either columns or table o
 
 ###### Example:
 ```javascript
-    SQLZ>
-        (Table1)
-            (Column1(type=DataTypes.STRING))
-            (Column2(type=DataTypes.STRING))
-            (...columns) // can also specify columns here
-                (AnotherColumn1(type=DataTypes.STRING))
-            (...name)
-                (singular='tableone')
-                (plural='tableones')
-        (Table2) // multiple tables are allowed
-            (test(type=DataTypes.STRING))
+SQLZ>
+		(Table1)
+			(Column1(type=DataTypes.STRING))
+			(Column2(type=DataTypes.STRING))
+			(...columns) // can also specify columns here
+				(AnotherColumn1(type=DataTypes.STRING))
+			(...name)
+				(singular='tableone')
+				(plural='tableones')
+		(Table2) // multiple tables are allowed
+			(test(type=DataTypes.STRING))
 ```
 ###### Transpiles to:
 ```javascript
@@ -430,7 +430,7 @@ SQLZ>
 			(onUpdate='CASCADE')
 		(...options)
 			(defaultScope)
-			    (where(active=true))
+				(where(active=true))
 			(omitNull=false)
 			(paranoid=false)
 			(underscored=false)
@@ -563,8 +563,8 @@ const User = sequelize.define('User', {
 	getters: {
 		function getTwoName() {
 			return 
-			    this.getDataValue('name') + " " +
-			    this.getDataValue('name');
+				this.getDataValue('name') + " " +
+				this.getDataValue('name');
 		}
 
 	}
