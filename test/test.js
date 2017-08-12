@@ -7,13 +7,20 @@ var assert = require('assert');
 var plugin = require('../lib/sequelize-markup').default;
 
 var tests = [
-	//{file: 'simple1'},
-	//{file: 'simple2'},
-	//{file: 'multiple1'},
-	//{file: 'scope1'},
-	//{file: 'scope2'},
-	//{file: 'all'},
-	//{file: 'example1'},
+	{ file: 'associations' },
+	{ file: 'callsqlzinit' },
+	{ file: 'columns' },
+	{ file: 'config' },
+	{ file: 'getters' },
+	{ file: 'hooks' },
+	{ file: 'indexes' },
+	{ file: 'name' },
+	{ file: 'options' },
+	{ file: 'scopes' },
+	{ file: 'setters' },
+	{ file: 'sqlz' },
+	{ file: 'sqlzinit' },
+	{ file: 'validate' },
 ]
 
 describe('transform code', function (){
