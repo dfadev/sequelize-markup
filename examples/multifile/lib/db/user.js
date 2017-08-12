@@ -8,9 +8,6 @@ exports.default = function (sequelize, DataTypes) {
 	var User = sequelize.define("User", {
 		name: {
 			type: DataTypes.STRING(60)
-		},
-		other: {
-			type: DataTypes.STRING
 		}
 	});
 
