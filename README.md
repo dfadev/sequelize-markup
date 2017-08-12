@@ -1,6 +1,6 @@
 # sequelize-markup
 
-This is a Babel plugin that transpiles ident aware markup into a [Sequelize](http://docs.sequelizejs.com/) configuration and model definition.
+This is a Babel plugin that transpiles indent aware markup into a [Sequelize](http://docs.sequelizejs.com/) configuration and model definition.
 
 ## Features:
 
