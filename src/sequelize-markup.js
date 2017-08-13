@@ -376,6 +376,7 @@ function parseCalls(path) {
 				let b = chainElement(path);
 				return [b];
 			}
+			break;
 
 		case "MemberExpression":
 			if (path.object.extra && path.object.extra.parenthesized && path.property.type != "SequenceExpression") {
