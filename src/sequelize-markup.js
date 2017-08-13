@@ -395,7 +395,7 @@ function parseCalls(path) {
 			break;
 
 		default:
-			throw path.buildCodeFrameError('parseCalls unknown node type: ' + path.type);
+			throw curFile.buildCodeFrameError(path, 'parseCalls unknown node type: ' + path.type);
 
 	}
 }
@@ -449,7 +449,7 @@ function chainElement(path) {
 			break;
 
 		default:
-			throw path.buildCodeFrameError("chainElement unknown node type: " + path.type);
+			throw curFile.buildCodeFrameError(path, "chainElement unknown node type: " + path.type);
 	}
 
 	return element;
