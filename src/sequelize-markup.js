@@ -251,7 +251,6 @@ function parseSQLZ(path) {
 			throw path.buildCodeFrameError("invalid table block type " + tbl.block.type);
 
 		let varName = tbl.block.selector.tag,
-			//tableName = t.stringLiteral(varName[0].toLowerCase() + varName.slice(1)),
 			tableName = t.stringLiteral(varName),
 			tableOptions = t.objectExpression([]),
 			columns = t.objectExpression([]),
