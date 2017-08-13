@@ -6,11 +6,13 @@ import traverse from "babel-traverse";
 
 var SQLZ = "SQLZ";
 var SQLZINIT = "SQLZINIT";
+var curFile;
 
 export default function({ types: t }) {
 	return {
 		visitor: {
 			BinaryExpression(path) {
+				curFile = path.hub.file;
 
 				if (path.node.operator != ">") return;
 
@@ -27,6 +29,7 @@ export default function({ types: t }) {
 			},
 
 			CallExpression(path) {
+				curFile = path.hub.file;
 				if (t.isIdentifier(path.node.callee) && path.node.callee.name == SQLZINIT)
 					parseCallSQLZINIT(path);
 			}
@@ -358,7 +361,7 @@ function childToOption(child, opts, noKeyFunc = true) {
 		}
 	} else if (child.block.type == 'ElementBlock' || child.block.type == 'CustomElement') {
 		childrenToNamedOptions(child, opts, child.block.selector.tag, noKeyFunc);
-	} else throw path.buildCodeFrameError("childToOption: bad child " + child.block.type);
+	} else throw curFile.buildCodeFrameError(child.block.path, "childToOption: bad child " + child.block.type);
 }
 
 function parseCalls(path) {
