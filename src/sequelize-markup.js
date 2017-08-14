@@ -88,7 +88,7 @@ function parseSQLZINIT(path) {
 		orderedBlocks = orderBlocks(calls),
 		declarations = [];
 
-	let config, configObj, environment, uri, models;
+	let config, configObj, optionalConfig = [], environment, uri, models;
 
 	for (let tbl of orderedBlocks) {
 
@@ -112,8 +112,8 @@ function parseSQLZINIT(path) {
 
 		} else if (tbl.block.type == "ElementBlock" && tbl.block.selector.tag == "config") {
 			configObj = t.objectExpression([]);
-			childrenToOptions(tbl, configObj, false);
-		} else throw path.buildCodeFrameError("invalid init block type " + tbl.block.type);
+			childrenToOptions(tbl, configObj, optionalConfig, false);
+		} else throw curFile.buildCodeFrameError(tbl.block.path, "invalid init block type " + tbl.block.type);
 	}
 
 	var kind = path.parentPath.parent.kind;
@@ -155,7 +155,20 @@ function parseSQLZINIT(path) {
 							t.identifier("require"), [ t.identifier("cfgFile") ]), t.identifier("env"), true)),
 			]);
 	} else if (configObj) {
-		vars.push( t.variableDeclarator(t.identifier("cfg"), t.memberExpression(configObj, t.identifier("env"), true)) );
+		if (optionalConfig.length == 0)
+			vars.push( t.variableDeclarator(t.identifier("cfg"), t.memberExpression(configObj, t.identifier("env"), true)) );
+		else {
+			vars.push( t.variableDeclarator(t.identifier("cfg"),
+				t.memberExpression(
+					t.callExpression(
+						t.memberExpression(
+							t.identifier("Object"),
+							t.identifier("assign")
+						),
+						[ configObj, ...optionalConfig ]),
+				t.identifier("env"),
+				true)));
+		}
 	} else
 		throw curFile.buildCodeFrameError(path, "no config specified");
 
@@ -241,6 +254,92 @@ function parseSQLZINIT(path) {
 	path.parentPath.parentPath.replaceWithMultiple(declarations);
 }
 
+function parseAssociation(varName, assoc) {
+	let type = t.identifier(assoc.block.selector.tag),
+		target = t.memberExpression(
+			t.memberExpression(t.identifier("sequelize"), t.identifier('models')), 
+			t.identifier(assoc.block.selector.classes[0])),
+		options = t.objectExpression([]),
+		optionalOptions = [];
+
+	attributesToOptions(assoc, options);
+	childrenToOptions(assoc, options, optionalOptions, false);
+	let assocOpts = objOrAssign(options, optionalOptions);
+
+	let rslt = 
+		t.callExpression(
+			t.memberExpression(t.identifier(varName), type),
+			[ target, assocOpts ]);
+	return rslt;	
+}
+
+function parseAssociations(varName, child, associations) {
+
+	for (let i = 0; i < child.children.length; i++) {
+		let assoc = child.children[i];
+		let conditions = [];
+
+		if (assoc.block.type == "ElementBlock") {
+
+			associations.push(t.expressionStatement(parseAssociation(varName, assoc)));
+
+		} else if (assoc.block.type == "AssignmentExpression") {
+			let assocElement = orderBlocks([chainElement(assoc.block.path.right)])[0];
+			assocElement.children = assoc.children;
+
+			associations.push(t.expressionStatement(
+				t.assignmentExpression(
+					"=",
+					t.memberExpression(
+						t.identifier(varName),
+						t.identifier(assoc.block.selector.tag)),
+					parseAssociation(varName, assocElement))));
+
+		} else if (assoc.block.type == "If") {
+			let ifAssociations = [];
+			parseAssociations(varName, assoc, ifAssociations);
+			conditions.push({ cond: assoc.block.condition, child: t.blockStatement(ifAssociations) });
+
+			if (child.children.length > i+1) {
+
+				for (let y = i+1; y < child.children.length; y++) {
+					let next = child.children[y];
+					if (next.block.type == "Else") {
+						if (next.indent == assoc.indent) {
+							let elseAssociations = [];
+							parseAssociations(varName, next, elseAssociations);
+							conditions.push({ cond: null, child: t.blockStatement(elseAssociations) });
+							break;
+
+						}
+					} else if (next.block.type == "ElseIf") {
+
+						if (next.indent == assoc.indent) {
+							let elseIfAssociations = [];
+							parseAssociations(varName, next, elseIfAssociations);
+							conditions.push({ cond: next.block.condition, child: t.blockStatement(elseIfAssociations) });
+						}
+						else
+							break;
+
+					} else if (next.indent == assoc.indent) break;
+				}
+
+			}
+
+		} else if (assoc.block.type == "ElseIf" || assoc.block.type == "Else") {
+		} else {
+
+			throw curFile.buildCodeFrameError(assoc.block.path, "invalid association element type " + assoc.block.type);
+
+		}
+
+		if (conditions.length > 0)
+			associations.push(generateIfChain(conditions, false));
+	}
+
+}
+
 function parseSQLZ(path) {
 	let calls = parseCalls(path.node.right),
 		orderedBlocks = orderBlocks(calls),
@@ -253,55 +352,49 @@ function parseSQLZ(path) {
 		let varName = tbl.block.selector.tag,
 			tableName = t.stringLiteral(varName),
 			tableOptions = t.objectExpression([]),
+			optionalTableOptions = [],
 			columns = t.objectExpression([]),
-			associations = [];
+			optionalColumns = [],
+			associations = [],
+			optionalAssociations = [];
 
 		classesToOptions(tbl, tableOptions);
 		attributesToOptions(tbl, tableOptions);
 
 		// (...items)
 		for (let child of tbl.children) {
-			if (child.block.type != "SpreadElement") {
-				childrenToNamedOptions(child, columns, child.block.selector.tag, true);
+			if (child.block.type == "ElementBlock" || child.block.type == "CustomElement") {
+				childrenToNamedOptions(child, columns, optionalColumns, child.block.selector.tag, true);
 				continue;
-			}
+			} else if (child.block.type == "SpreadElement") {
 
-			let argName = child.block.path.argument.name;
+				let argName = child.block.path.argument.name;
 
-			switch (argName) {
-				case "options":
-					childrenToOptions(child, tableOptions, true);
-					break;
+				switch (argName) {
+					case "options":
+						childrenToOptions(child, tableOptions, optionalTableOptions, true);
+						break;
 
-				case "columns":
-					childrenToOptions(child, columns, true);
-					break;
+					case "columns":
+						childrenToOptions(child, columns, optionalColumns, true);
+						break;
 
-				case "name":
-				case "getters":
-				case "setters":
-				case "validate":
-				case "indexes":
-				case "scopes":
-					childrenToNamedOptions(child, tableOptions, argName, true);
-					break;
+					case "name":
+					case "getters":
+					case "setters":
+					case "validate":
+					case "indexes":
+					case "scopes":
+						childrenToNamedOptions(child, tableOptions, optionalTableOptions, argName, true);
+						break;
 
-				case "associations":
-					for (let assoc of child.children) {
-						let type = t.identifier(assoc.block.selector.tag),
-							target = t.memberExpression(t.memberExpression(t.identifier("sequelize"), t.identifier('models')), t.identifier(assoc.block.selector.classes[0])),
-							options = t.objectExpression([]);
+					case "associations":
+						parseAssociations(varName, child, associations);
+						break;
 
-						attributesToOptions(assoc, options);
-						childrenToOptions(assoc, options);
-
-						associations.push(t.expressionStatement(t.callExpression(t.memberExpression(t.identifier(varName), type), [ target, options ]))); 
-					}
-					break;
-
-				case "hooks":
-					childrenToNamedOptions(child, tableOptions, argName, false);
-					break;
+					case "hooks":
+						childrenToNamedOptions(child, tableOptions, optionalTableOptions, argName, false);
+						break;
 
 					default:
 						throw curFile.buildCodeFrameError(child.block.path, "unrecognized table category: " + argName);
@@ -314,21 +407,66 @@ function parseSQLZ(path) {
 
 		}
 
+		columns = objOrAssign(columns, optionalColumns);
+		let tableOpts = objOrAssign(tableOptions, optionalTableOptions);
+
 		let callee = t.memberExpression(t.identifier('sequelize'), t.identifier('define')),
-			params = tableOptions.properties.length > 0 ? [ tableName, columns, tableOptions ] : [ tableName, columns ],
+			params = tableOpts.type == "CallExpression" || tableOpts.properties.length > 0 ? [ tableName, columns, tableOpts ] : [ tableName, columns ],
 			callExpr = t.callExpression(callee, params),
 			tableDecl = t.variableDeclaration("const", [ t.variableDeclarator(t.identifier(varName), callExpr) ]); 
 
 		declarations.push(tableDecl);
 
 		if (associations.length > 0) {
-			let assocFunc = t.expressionStatement(t.assignmentExpression("=", t.memberExpression(t.identifier(varName), t.identifier('associate')), t.arrowFunctionExpression([ t.identifier('sequelize') ], t.blockStatement(associations))));
+			let assocFunc = t.expressionStatement(
+				t.assignmentExpression(
+					"=", 
+					t.memberExpression(
+						t.identifier(varName), 
+						t.identifier('associate')), 
+					t.arrowFunctionExpression(
+						[ t.identifier('sequelize') ], 
+						t.blockStatement(associations))));
 			declarations.push(assocFunc);
 		}
 
 	}
 
 	path.replaceWithMultiple(declarations);
+}
+
+function generateIfChain(conditions, shortHand = true) {
+	// get the next condition
+	var condition = conditions.shift();
+
+	// check for no more conditions, or final else
+	if (condition == null) return null;
+	if (condition.cond == null) return condition.child;
+
+	// recurse deeper to generate the next if
+	var nextIf = generateIfChain(conditions, shortHand);
+	if (nextIf == null) 
+		return shortHand ?
+			t.conditionalExpression(
+				condition.cond, 
+				condition.child, 
+				t.identifier("undefined"))
+			:
+			t.ifStatement(
+				condition.cond,
+				condition.child,
+				null);
+	else {
+		return shortHand ?
+			t.conditionalExpression(
+				condition.cond, 
+				condition.child, 
+				nextIf) :
+			t.ifStatement(
+				condition.cond,
+				condition.child,
+				nextIf);
+	}
 }
 
 function attributesToOptions(item, opts) {
@@ -342,29 +480,91 @@ function classesToOptions(item, opts) {
 		opts.properties.push(t.objectProperty(t.identifier(cls), t.identifier("true")));
 }
 
-function childrenToOptions(item, opts, noKeyFunc = true) {
-	for (let child of item.children)
-		childToOption(child, opts, noKeyFunc);
+function objOrAssign(objExpr, condObjs) {
+	if (condObjs.length == 0) {
+		return objExpr;
+	} else {
+		let rslt =
+				t.callExpression(
+					t.memberExpression(
+						t.identifier("Object"),
+						t.identifier("assign")
+					),
+					[ objExpr, ...condObjs ]);
+		return rslt;
+	}
 }
 
-function childrenToNamedOptions(item, opts, name, noKeyFunc = true) {
+function  childrenToOptions(item, opts, optionalOpts, noKeyFunc = true) {
+	for (let i = 0; i < item.children.length; i++) {
+		let child = item.children[i];
+
+		if (child.block.type == 'AssignmentExpression') {
+
+			if (noKeyFunc && child.block.path.right.type == 'ArrowFunctionExpression') {
+					opts.properties.push(t.functionDeclaration(t.identifier(child.block.selector.tag), child.block.path.right.params, child.block.path.right.body));
+			} else {
+				opts.properties.push(t.objectProperty(child.block.path.left, child.block.path.right));
+			}
+
+		} else if (child.block.type == 'ElementBlock' || child.block.type == 'CustomElement') {
+
+			childrenToNamedOptions(child, opts, optionalOpts, child.block.selector.tag, noKeyFunc);
+
+		} else if (child.block.type == 'If') {
+			let conditions = [];
+			let condObj = t.objectExpression([]);
+			let condOptionalObj = [];
+
+			childrenToOptions(child, condObj, condOptionalObj, noKeyFunc);
+
+			let condChild = objOrAssign(condObj, condOptionalObj);
+
+			conditions.push({ cond: child.block.condition, child: condChild });
+
+			if (item.children.length > i+1) {
+				for (let y = i+1; y < item.children.length; y++) {
+					let next = item.children[y];
+					if (next.block.type == "Else") {
+						if (next.indent == child.indent) {
+							let elseCondObj = t.objectExpression([]);
+							let elseCondOptionalObj = [];
+							childrenToOptions(next, elseCondObj, elseCondOptionalObj, noKeyFunc);
+							let condChild = objOrAssign(elseCondObj, elseCondOptionalObj);
+
+							conditions.push({ cond: null, child: condChild });
+							break;
+						}
+					} else if (next.block.type == "ElseIf") {
+						if (next.indent == child.indent) {
+							let elseIfCondObj = t.objectExpression([]);
+							let elseIfCondOptionalObj = [];
+							childrenToOptions(next, elseIfCondObj, elseIfCondOptionalObj, noKeyFunc);
+							let condChild = objOrAssign(elseIfCondObj, elseIfCondOptionalObj);
+
+							conditions.push({ cond: next.block.condition, child: condChild });
+						}
+						else
+							break;
+					} else if (next.indent == child.indent) break;
+				}
+			}
+
+			let rslt = generateIfChain(conditions);
+			optionalOpts.push(rslt);
+
+		} else if (child.block.type == 'ElseIf' || child.block.type == 'Else') {
+		} else 
+		throw curFile.buildCodeFrameError(child.block.path, "childToOption: bad child " + child.block.type);
+	}
+}
+
+function childrenToNamedOptions(item, opts, optionalOpts, name, noKeyFunc = true) {
 	let options = t.objectExpression([]);
 	classesToOptions(item, options);
 	attributesToOptions(item, options);
-	childrenToOptions(item, options, noKeyFunc);
+	childrenToOptions(item, options, optionalOpts, noKeyFunc);
 	opts.properties.push(t.objectProperty(t.identifier(name), options));
-}
-
-function childToOption(child, opts, noKeyFunc = true) {
-	if (child.block.type == 'AssignmentExpression') {
-		if (noKeyFunc && child.block.path.right.type == 'ArrowFunctionExpression') {
-				opts.properties.push(t.functionDeclaration(t.identifier(child.block.selector.tag), child.block.path.right.params, child.block.path.right.body));
-		} else {
-			opts.properties.push(t.objectProperty(child.block.path.left, child.block.path.right));
-		}
-	} else if (child.block.type == 'ElementBlock' || child.block.type == 'CustomElement') {
-		childrenToNamedOptions(child, opts, child.block.selector.tag, noKeyFunc);
-		throw curFile.buildCodeFrameError(child.block.path, "childToOption: bad child " + child.block.type);
 }
 
 function parseCalls(path) {
@@ -418,12 +618,16 @@ function chainElement(path) {
 
 	switch (path.type) {
 		case "Identifier":
-			element.selector.tag = path.name;
-			if (path.name[0] === path.name[0].toUpperCase()) {
-				element.type = 'CustomElement';
-				element.arguments = [];
+			if (path.name == "$else") {
+				element.type = "Else";
 			} else {
-				element.type = 'ElementBlock';
+				element.selector.tag = path.name;
+				if (path.name[0] === path.name[0].toUpperCase()) {
+					element.type = 'CustomElement';
+					element.arguments = [];
+				} else {
+					element.type = 'ElementBlock';
+				}
 			}
 			break;
 		
@@ -432,15 +636,32 @@ function chainElement(path) {
 			break;
 
 		case "CallExpression":
-			element = chainElement(path.callee);
-			let attr = t.objectExpression([]);
+			let foundDirective = false;
+			if (path.callee.type == "Identifier") {
+				switch (path.callee.name) {
+					case "$if":
+						element.type = "If";
+						element.condition = path.arguments[0];
+						foundDirective = true;
+						break;
+					case "$elseif":
+						element.type = "ElseIf";
+						element.condition = path.arguments[0];
+						foundDirective = true;
+						break;
+				}
+			} 
+			if (!foundDirective) {
+				element = chainElement(path.callee);
+				let attr = t.objectExpression([]);
 
-			for (let entry of path.arguments) {
-				if (entry.type == "AssignmentExpression") {
-					attr.properties.push(t.objectProperty(entry.left, entry.right));
-				} else throw "bad attribute " + entry;
+				for (let entry of path.arguments) {
+					if (entry.type == "AssignmentExpression") {
+						attr.properties.push(t.objectProperty(entry.left, entry.right));
+					} else throw "bad attribute " + entry;
+				}
+				element.attributes = attr;
 			}
-			element.attributes = attr;
 			break;
 
 		case "AssignmentExpression":
@@ -518,7 +739,6 @@ function parseEndBlock(e, element) {
 
 	let code = clean.code.replace(/\s/g, '').slice(0, -1);
 	element.selector = parseSelector(code);
-	if (element.selector.tag[0] === element.selector.tag[0].toUpperCase()) element.type = "CustomElement";
 }
 
 const removeAttr = {
