@@ -122,7 +122,7 @@ function parseSQLZINIT(path) {
 	// var db = { };
 	declarations.push(t.variableDeclaration(kind, [ t.variableDeclarator(t.identifier(varname), t.objectExpression([])) ] ));
 
-	if (!environment) throw path.buildCodeFrameError("no environment specified");
+	if (!environment) throw curFile.buildCodeFrameError(path, "no environment specified");
 
 	var vars = [ 
 		//var Sequelize = require("sequelize");
@@ -157,7 +157,7 @@ function parseSQLZINIT(path) {
 	} else if (configObj) {
 		vars.push( t.variableDeclarator(t.identifier("cfg"), t.memberExpression(configObj, t.identifier("env"), true)) );
 	} else
-		throw path.buildCodeFrameError("no config specified");
+		throw curFile.buildCodeFrameError(path, "no config specified");
 
 	if (uri) {
 		vars.push(
@@ -248,7 +248,7 @@ function parseSQLZ(path) {
 
 	for (let tbl of orderedBlocks) {
 		if (!['ElementBlock', 'CustomElement'].includes(tbl.block.type)) 
-			throw path.buildCodeFrameError("invalid table block type " + tbl.block.type);
+			throw curFile.buildCodeFrameError(tbl.block.path, "invalid table block type " + tbl.block.type);
 
 		let varName = tbl.block.selector.tag,
 			tableName = t.stringLiteral(varName),
@@ -303,11 +303,15 @@ function parseSQLZ(path) {
 					childrenToNamedOptions(child, tableOptions, argName, false);
 					break;
 
-				default:
-					throw path.buildCodeFrameError("unrecognized table category: " + argName);
-					break;
+					default:
+						throw curFile.buildCodeFrameError(child.block.path, "unrecognized table category: " + argName);
+						break;
 
+				}
+			} else {
+				throw curFile.buildCodeFrameError(child.block.path, "invalid table child element type " + child.block.type);
 			}
+
 		}
 
 		let callee = t.memberExpression(t.identifier('sequelize'), t.identifier('define')),
@@ -360,7 +364,7 @@ function childToOption(child, opts, noKeyFunc = true) {
 		}
 	} else if (child.block.type == 'ElementBlock' || child.block.type == 'CustomElement') {
 		childrenToNamedOptions(child, opts, child.block.selector.tag, noKeyFunc);
-	} else throw curFile.buildCodeFrameError(child.block.path, "childToOption: bad child " + child.block.type);
+		throw curFile.buildCodeFrameError(child.block.path, "childToOption: bad child " + child.block.type);
 }
 
 function parseCalls(path) {
