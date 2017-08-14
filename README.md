@@ -30,7 +30,7 @@ SQLZ>
   (User)
     (name(type=DataTypes.STRING(60)))
     (...associations)
-      (hasMany.Task)
+      (Tasks=hasMany.Task)
 
   (Task)
     (title(type=DataTypes.STRING(255)))
@@ -77,7 +77,7 @@ const User = sequelize.define("User", {
 });
 
 User.associate = sequelize => {
-  User.hasMany(sequelize.models.Task, {});
+  User.Tasks = User.hasMany(sequelize.models.Task, {});
 };
 
 const Task = sequelize.define("Task", {
@@ -130,7 +130,7 @@ export default function(sequelize, DataTypes) {
     (User)
       (name(type=DataTypes.STRING(60)))
       (...associations)
-        (hasMany.Task)
+        (Tasks=hasMany.Task)
 }
 ```
 
@@ -222,7 +222,7 @@ export default function (sequelize, DataTypes) {
   });
 
   User.associate = sequelize => {
-    User.hasMany(sequelize.models.Task, {});
+    User.Tasks = User.hasMany(sequelize.models.Task, {});
   };
 }
 ```
@@ -677,8 +677,8 @@ SQLZ>
   (User)
     (name(type=DataTypes.STRING(60)))
     (...associations)
-      (belongsTo.Organization)
-      (belongsToMany.Project(through='UserProject'))
+      (Orgs=belongsTo.Organization)
+      (Projects=belongsToMany.Project(through='UserProject'))
         (constraints=false)
 ```
 ###### Transpiles to:
@@ -690,8 +690,8 @@ const User = sequelize.define('User', {
 });
 
 User.associate = sequelize => {
-  User.belongsTo(sequelize.models.Organization, {});
-  User.belongsToMany(sequelize.models.Project, {
+  User.Orgs = User.belongsTo(sequelize.models.Organization, {});
+  User.Projects = User.belongsToMany(sequelize.models.Project, {
     through: 'UserProject',
     constraints: false
   });
