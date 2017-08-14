@@ -1,8 +1,19 @@
-const Table = sequelize.define('Table', {
+const Table = sequelize.define('Table', Object.assign({
 	column1: {
 		type: DataTypes.STRING
+	},
+	column3: {
+		type: DataTypes.STRING
 	}
-});
+}, false ? {
+	column2: {
+		type: DataTypes.STRING
+	}
+} : undefined, 100 == 100 ? {
+	column4: {
+		type: DataTypes.STRING
+	}
+} : undefined));
 
 Table.associate = sequelize => {
 	if (yo) {

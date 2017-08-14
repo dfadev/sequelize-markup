@@ -361,11 +361,13 @@ function parseSQLZ(path) {
 		classesToOptions(tbl, tableOptions);
 		attributesToOptions(tbl, tableOptions);
 
+		childrenToOptions(tbl, columns, optionalColumns, true, [ 'SpreadElement' ]);
+
 		// (...items)
 		for (let child of tbl.children) {
 			if (child.block.type == "ElementBlock" || child.block.type == "CustomElement") {
-				childrenToNamedOptions(child, columns, optionalColumns, child.block.selector.tag, true);
-				continue;
+			} else if (child.block.type == "If") {
+			} else if (child.block.type == "ElseIf" || child.block.type == "Else") {
 			} else if (child.block.type == "SpreadElement") {
 
 				let argName = child.block.path.argument.name;
@@ -495,7 +497,7 @@ function objOrAssign(objExpr, condObjs) {
 	}
 }
 
-function  childrenToOptions(item, opts, optionalOpts, noKeyFunc = true) {
+function  childrenToOptions(item, opts, optionalOpts, noKeyFunc = true, ignore = []) {
 	for (let i = 0; i < item.children.length; i++) {
 		let child = item.children[i];
 
@@ -516,7 +518,7 @@ function  childrenToOptions(item, opts, optionalOpts, noKeyFunc = true) {
 			let condObj = t.objectExpression([]);
 			let condOptionalObj = [];
 
-			childrenToOptions(child, condObj, condOptionalObj, noKeyFunc);
+			childrenToOptions(child, condObj, condOptionalObj, noKeyFunc, ignore);
 
 			let condChild = objOrAssign(condObj, condOptionalObj);
 
@@ -529,7 +531,7 @@ function  childrenToOptions(item, opts, optionalOpts, noKeyFunc = true) {
 						if (next.indent == child.indent) {
 							let elseCondObj = t.objectExpression([]);
 							let elseCondOptionalObj = [];
-							childrenToOptions(next, elseCondObj, elseCondOptionalObj, noKeyFunc);
+							childrenToOptions(next, elseCondObj, elseCondOptionalObj, noKeyFunc, ignore);
 							let condChild = objOrAssign(elseCondObj, elseCondOptionalObj);
 
 							conditions.push({ cond: null, child: condChild });
@@ -539,7 +541,7 @@ function  childrenToOptions(item, opts, optionalOpts, noKeyFunc = true) {
 						if (next.indent == child.indent) {
 							let elseIfCondObj = t.objectExpression([]);
 							let elseIfCondOptionalObj = [];
-							childrenToOptions(next, elseIfCondObj, elseIfCondOptionalObj, noKeyFunc);
+							childrenToOptions(next, elseIfCondObj, elseIfCondOptionalObj, noKeyFunc, ignore);
 							let condChild = objOrAssign(elseIfCondObj, elseIfCondOptionalObj);
 
 							conditions.push({ cond: next.block.condition, child: condChild });
@@ -554,6 +556,7 @@ function  childrenToOptions(item, opts, optionalOpts, noKeyFunc = true) {
 			optionalOpts.push(rslt);
 
 		} else if (child.block.type == 'ElseIf' || child.block.type == 'Else') {
+		} else if (ignore.includes(child.block.type)) {
 		} else 
 		throw curFile.buildCodeFrameError(child.block.path, "childToOption: bad child " + child.block.type);
 	}
