@@ -1,6 +1,6 @@
 {
   "name": "sequelize-markup",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "scripts": {
     "build": "babel src -d lib",
     "test": "mocha"
@@ -13,9 +13,9 @@
     "babel-types": "^6.24.1"
   },
   "main": "lib/sequelize-markup.js",
-  "author": "",
+  "author": "Russ Panula <russ@dfa.net>",
   "license": "MIT",
-  "description": "",
+  "description": "Babel plugin to transpile markup into sequelize models",
   "babel": {
     "presets": [
       "env"
