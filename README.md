@@ -14,9 +14,9 @@ This is a Babel plugin that transpiles indent aware markup into a [Sequelize](ht
 ```javascript
 // configure sequelize
 var db = SQLZINIT>
-    // sequelize configuration options
+  // sequelize configuration options
   (config)
-      // "development" db environment
+    // "development" db environment
     (development(dialect="sqlite"))
       (storage="./db.development.sqlite")
     // "test" db environment
