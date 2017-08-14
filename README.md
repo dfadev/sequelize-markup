@@ -8,6 +8,7 @@ This is a Babel plugin that transpiles indent aware markup into a [Sequelize](ht
 * Declare models in a single file or in multiple files
 * Connection configuration stored in a file or in code
 * Multiple database environments
+* Conditional declarations
 
 ## Model in single file, with configuration in code:
 ###### src/index.js:
@@ -754,3 +755,43 @@ const User = sequelize.define("User", {
   }
 });
 ```
+
+#### Conditional Declarations
+The `($if)`, `($elseif)`, and `($else)` elements conditionally declare model elements.
+###### Example:
+```javascript
+SQLZ>
+  (User)
+    ($if (firstAndLast))
+      (firstName(type=DataTypes.STRING(60)))
+      ($if (middle))
+        (middleName(type=DataTypes.STRING(60))
+      (lastName(type=DataTypes.STRING(60)))
+    ($else)
+      (name(type=DataTypes.STRING(60)))
+    (...options)
+      ($if (mysql))
+        (engine="MYISAM")
+```
+###### Transpiles to:
+```javascript
+const User = sequelize.define("User", Object.assign({}, firstAndLast ? Object.assign({
+  firstName: {
+    type: DataTypes.STRING(60)
+  },
+  lastName: {
+    type: DataTypes.STRING(60)
+  }
+}, middle ? {
+  middleName: {
+    type: DataTypes.STRING(60)
+  }
+} : undefined) : {
+  name: {
+    type: DataTypes.STRING(60)
+  }
+}), Object.assign({}, mysql ? {
+  engine: "MYISAM"
+} : undefined));
+```
+
