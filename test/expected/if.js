@@ -10,9 +10,17 @@ const Table = sequelize.define('Table', Object.assign({
 		type: DataTypes.STRING
 	}
 } : undefined, 100 == 100 ? {
-	column4: {
+	column4: Object.assign({
 		type: DataTypes.STRING
-	}
+	}, true ? {
+		unique: true
+	} : undefined)
+} : undefined), Object.assign({}, true ? {
+	someTableOption: Object.assign({
+		key: val
+	}, false ? {
+		someOtherOption: true
+	} : undefined)
 } : undefined));
 
 Table.associate = sequelize => {

@@ -2,7 +2,6 @@ import * as t from "babel-types";
 import generate from "babel-generator";
 import IndentParser from "./IndentParser";
 import ObjectPropertiesParser from "./ObjectPropertiesParser";
-import QueryParser from "./QueryParser";
 
 export default class SequelizeParser {
 
@@ -33,9 +32,11 @@ export default class SequelizeParser {
 				optionalAssociations = [],
 				queries = [];
 
+			// table options
 			this.objPropParser.classesToOptions(tbl, tableOptions);
 			this.objPropParser.attributesToOptions(tbl, tableOptions);
 
+			// columns
 			this.objPropParser.childrenToOptions(tbl, columns, optionalColumns, true, [ 'SpreadElement' ]);
 
 			// (...items)
@@ -73,6 +74,10 @@ export default class SequelizeParser {
 							this.objPropParser.childrenToNamedOptions(child, tableOptions, optionalTableOptions, argName, false);
 							break;
 
+						case "queries":
+							this.parseQueries(varName, child, queries);
+							break;
+
 						default:
 							throw this.file.buildCodeFrameError(child.block.path, "unrecognized table category: " + argName);
 							break;
@@ -90,20 +95,20 @@ export default class SequelizeParser {
 			let callee = t.memberExpression(t.identifier('sequelize'), t.identifier('define')),
 				params = tableOpts.type == "CallExpression" || tableOpts.properties.length > 0 ? [ tableName, columns, tableOpts ] : [ tableName, columns ],
 				callExpr = t.callExpression(callee, params),
-				tableDecl = t.variableDeclaration("const", [ t.variableDeclarator(t.identifier(varName), callExpr) ]); 
+				tableDecl = t.variableDeclaration("const", [ t.variableDeclarator(t.identifier(varName), callExpr) ]);
 
 			declarations.push(tableDecl);
 
-			if (associations.length > 0) {
+			if (associations.length > 0 || queries.length > 0) {
 				let assocFunc = t.expressionStatement(
 					t.assignmentExpression(
-						"=", 
+						"=",
 						t.memberExpression(
-							t.identifier(varName), 
-							t.identifier('associate')), 
+							t.identifier(varName),
+							t.identifier('associate')),
 						t.arrowFunctionExpression(
-							[ t.identifier('sequelize') ], 
-							t.blockStatement(associations))));
+							[ t.identifier('sequelize') ],
+							t.blockStatement(associations.concat(queries)))));
 				declarations.push(assocFunc);
 			}
 
@@ -112,10 +117,167 @@ export default class SequelizeParser {
 		this.path.replaceWithMultiple(declarations);
 	}
 
+	// try to support:
+	//
+	// calls with opts only:
+	//
+	// count(opts)
+	// destroy(opts)
+	// drop(opts)
+	// findAll(opts)
+	// findAndCount(opts)
+	// findCreateFind(opts)
+	// findOne(opts)
+	// findOrBuild(opts) / findOrInitialize(opts)
+	// findOrCreate(opts)
+	// restore(opts)
+	// sync(opts)
+	// truncate(opts)
+	//
+	// calls with obj, opts:
+	//
+	// create(vals, opts)
+	// update(vals, opts)
+	// upsert(vals, opts)
+	//
+	// calls with field(s), opts:
+	//
+	// increment(fields, opts)
+	// max(field, opts)
+	// min(field, opts)
+	// sum(field, opts)
+	//
+	// others:
+	//
+	// aggregate(field, func, opts)
+	// describe(schema, opts)
+	// findById(id, opts)
+	//
+	// raw
+	//
+	// options structure:
+	//
+	// options.
+	// 	where
+	// 	attributes
+	// 		include
+	// 		exclude
+	// 	paranoid
+	// 	include[]
+	// 		model
+	// 		as
+	// 		association
+	// 		where
+	// 		or
+	// 		on
+	// 		attributes[]
+	//		required
+	//		separate
+	//		limit
+	//		through
+	//			where
+	//			attributes
+	//		include[]
+	//	order
+	//	limit
+	//	offset
+	//	transaction
+	//	lock
+	//	raw
+	//	logging
+	//	benchmark
+	//	having
+	//	searchPath
+	//	rejectOnEmpty
+	//
+	parseQuery(varName, query) {
+		if (query.children.length != 1) throw this.file.buildCodeFrameError(query.block.path, "query can have only one query method");
+
+		let queryMethodNode = query.children[0];
+		if (queryMethodNode.block.type != "ElementBlock")
+			throw this.file.buildCodeFrameError(
+				queryMethodNode.block.path,
+				"invalid query method type " + queryMethodNode.block.type);
+
+		let methodName = query.block.selector.tag,
+			methodParameters = query.block.parameters,
+			queryMethodName = queryMethodNode.block.selector.tag,
+			opts = t.objectExpression([]),
+			optional = [];
+
+		this.objPropParser.childrenToOptions(queryMethodNode, opts, optional, false, []);
+		let queryOpts = this.objPropParser.objOrAssign(opts, optional);
+
+		let ret = t.returnStatement(
+			t.callExpression(t.memberExpression(t.identifier(varName), t.identifier(queryMethodName)), [queryOpts]));
+
+		let func = 
+			t.expressionStatement(
+				t.assignmentExpression(
+					"=",
+					t.memberExpression(
+						t.identifier(varName),
+						t.identifier(methodName)),
+
+					t.arrowFunctionExpression(
+						methodParameters,
+						t.blockStatement([ret]))));
+
+		return func;
+	}
+
+	parseQueries(varName, child, queries) {
+		for (let i = 0; i < child.children.length; i++) {
+			let query = child.children[i];
+			let conditions = [];
+
+			if (query.block.type == "ElementBlock") {
+				queries.push(this.parseQuery(varName, query));
+			} else if (query.block.type == "If") {
+				let ifQueries = [];
+				this.parseQueries(varName, query, ifQueries);
+				conditions.push({ cond: query.block.condition, child: t.blockStatement(ifQueries) });
+
+				if (child.children.length > i+1) {
+
+					for (let y = i+1; y < child.children.length; y++) {
+						let next = child.children[y];
+						if (next.block.type == "Else") {
+							if (next.indent == query.indent) {
+								let elseQueries = [];
+								this.parseQueries(varName, next, elseQueries);
+								conditions.push({ cond: null, child: t.blockStatement(elseQueries) });
+								break;
+
+							}
+						} else if (next.block.type == "ElseIf") {
+
+							if (next.indent == query.indent) {
+								let elseIfQueries = [];
+								this.parseQueries(varName, next, elseIfQueries);
+								conditions.push({ cond: next.block.condition, child: t.blockStatement(elseIfQueries) });
+							}
+							else
+								break;
+
+						} else if (next.indent == query.indent) break;
+					}
+
+				}
+			} else if (query.block.type == "ElseIf" || query.block.type == "Else") {
+			} else {
+				throw this.file.buildCodeFrameError(query.block.path, "invalid query element type " + query.block.type);
+			}
+
+			if (conditions.length > 0)
+				queries.push(this.objPropParser.generateIfChain(conditions, false));
+		}
+	}
+
 	parseAssociation(varName, assoc) {
 		let type = t.identifier(assoc.block.selector.tag),
 			target = t.memberExpression(
-				t.memberExpression(t.identifier("sequelize"), t.identifier('models')), 
+				t.memberExpression(t.identifier("sequelize"), t.identifier('models')),
 				t.identifier(assoc.block.selector.classes[0])),
 			options = t.objectExpression([]),
 			optionalOptions = [];
@@ -124,11 +286,11 @@ export default class SequelizeParser {
 		this.objPropParser.childrenToOptions(assoc, options, optionalOptions, false, []);
 		let assocOpts = this.objPropParser.objOrAssign(options, optionalOptions);
 
-		let rslt = 
+		let rslt =
 			t.callExpression(
 				t.memberExpression(t.identifier(varName), type),
 				[ target, assocOpts ]);
-		return rslt;	
+		return rslt;
 	}
 
 	parseAssociations(varName, child, associations) {

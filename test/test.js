@@ -22,6 +22,7 @@ var tests = [
 	{ file: 'sqlzinit' },
 	{ file: 'validate' },
 	{ file: 'if' },
+	{ file: 'queries' },
 ]
 
 describe('transform code', function (){

@@ -133,10 +133,12 @@ export default class ObjectPropertiesParser {
 
 	childrenToNamedOptions(item, opts, optionalOpts, name, noKeyFunc = true) {
 		let options = t.objectExpression([]);
+		let optionalOptions = [];
 		this.classesToOptions(item, options);
 		this.attributesToOptions(item, options);
-		this.childrenToOptions(item, options, optionalOpts, noKeyFunc, []);
-		opts.properties.push(t.objectProperty(t.identifier(name), options));
+		this.childrenToOptions(item, options, optionalOptions, noKeyFunc, []);
+		let finalOpts = this.objOrAssign(options, optionalOptions);
+		opts.properties.push(t.objectProperty(t.identifier(name), finalOpts));
 	}
 
 }
