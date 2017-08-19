@@ -5,7 +5,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 
 exports.default = function (sequelize, DataTypes) {
-	var Task = sequelize.define("Task", {
+	const Task = sequelize.define("Task", {
 		title: {
 			type: DataTypes.STRING(255)
 		}

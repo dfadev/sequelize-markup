@@ -8,7 +8,7 @@ SQLZ>
 	(User)
 			(name(type=DataTypes.STRING(60)))
 			(...associations)
-				(hasMany.Task)
+				(Tasks=hasMany.Task)
 
 	(Task)
 			(title(type=DataTypes.STRING(255)))

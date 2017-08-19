@@ -15,15 +15,13 @@ var Sequelize = require("sequelize"),
     modelGlob = path.join(__dirname, "**/!(index).js"),
     files = glob.sync(modelGlob);
 
-for (var i = 0; i < files.length; i++) {
-	sequelize.import(files[i]);
-}
+for (let i = 0; i < files.length; i++) sequelize.import(files[i]);
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
-for (var mdl in sequelize.models) {
-	var model = sequelize.models[mdl];
+for (let mdl in sequelize.models) {
+	let model = sequelize.models[mdl];
 	db[mdl] = model;
 	if (model.associate) model.associate(sequelize);
 }

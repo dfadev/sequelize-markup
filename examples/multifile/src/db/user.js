@@ -3,5 +3,5 @@ export default function(sequelize, DataTypes) {
 		(User)
 			(name(type=DataTypes.STRING(60)))
 			(...associations)
-				(hasMany.Task)
+				(Tasks=hasMany.Task)
 }

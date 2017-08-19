@@ -5,13 +5,13 @@ Object.defineProperty(exports, "__esModule", {
 });
 
 exports.default = function (sequelize, DataTypes) {
-	var User = sequelize.define("User", {
+	const User = sequelize.define("User", {
 		name: {
 			type: DataTypes.STRING(60)
 		}
 	});
 
-	User.associate = function (sequelize) {
-		User.hasMany(sequelize.models.Task, {});
+	User.associate = sequelize => {
+		User.Tasks = User.hasMany(sequelize.models.Task, {});
 	};
 };
