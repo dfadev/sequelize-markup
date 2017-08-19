@@ -1,6 +1,6 @@
 {
   "name": "sequelize-markup",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "scripts": {
     "build": "babel src -d lib",
     "test": "mocha"
@@ -18,7 +18,12 @@
   "description": "Babel plugin to transpile markup into sequelize models",
   "babel": {
     "presets": [
-      "env"
+			["env", {
+				"targets": {
+					"node": "current"
+				}
+			}
+			]
     ]
   },
   "repository": "dfadev/sequelize-markup"
