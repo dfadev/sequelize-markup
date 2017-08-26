@@ -12,7 +12,7 @@ const User = sequelize.define('User', {
 		}
 	},
 	paranoid: true,
-	indexes: (function () {
+	indexes: function () {
 		var data = Object.assign({
 			user: {
 				unique: true,
@@ -36,5 +36,5 @@ const User = sequelize.define('User', {
 			data[key]['name'] = key;
 			return data[key];
 		});
-	})();
+	}()
 });

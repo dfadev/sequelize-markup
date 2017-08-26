@@ -70,7 +70,8 @@ export default class SequelizeParser {
 
 							this.objPropParser.childrenToNamedOptions(child, indexOptions, optionalIndexOptions, argName, true);
 
-							indexOptions.properties[0].value = this.indexTemplate( { INDEX: indexOptions.properties[0].value } );
+							var rslt = this.indexTemplate( { INDEX: indexOptions.properties[0].value } );
+							indexOptions.properties[0].value = rslt.expression;
 							tableOptions.properties.push(indexOptions.properties[0]);
 							break;
 
