@@ -2,6 +2,7 @@ import * as t from "babel-types";
 import generate from "babel-generator";
 import IndentParser from "./IndentParser";
 import ObjectPropertiesParser from "./ObjectPropertiesParser";
+import template from "babel-template";
 
 export default class SequelizeParser {
 
@@ -10,6 +11,12 @@ export default class SequelizeParser {
 		this.indentParser = new IndentParser(this.file);
 		this.objPropParser = new ObjectPropertiesParser(this.file);
 		this.path = path;
+		this.indexTemplate = template(`
+(function () {
+	var data = INDEX;
+	return Object.keys(data).map((key) => { data[key]['name'] = key; return data[key]; });
+})()
+`);
 	}
 
 	parse() {
@@ -57,11 +64,20 @@ export default class SequelizeParser {
 							this.objPropParser.childrenToOptions(child, columns, optionalColumns, true, []);
 							break;
 
+						case "indexes":
+							let indexOptions = t.objectExpression([]);
+							let optionalIndexOptions = [];
+
+							this.objPropParser.childrenToNamedOptions(child, indexOptions, optionalIndexOptions, argName, true);
+
+							indexOptions.properties[0].value = this.indexTemplate( { INDEX: indexOptions.properties[0].value } );
+							tableOptions.properties.push(indexOptions.properties[0]);
+							break;
+
 						case "name":
 						case "getters":
 						case "setters":
 						case "validate":
-						case "indexes":
 						case "scopes":
 							this.objPropParser.childrenToNamedOptions(child, tableOptions, optionalTableOptions, argName, true);
 							break;
