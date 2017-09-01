@@ -3,7 +3,7 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING(60)
   }
 }, {
-  getters: {
+  getterMethods: {
     getTwoName() {
       return this.getDataValue('name') + " " + this.getDataValue('name');
     }

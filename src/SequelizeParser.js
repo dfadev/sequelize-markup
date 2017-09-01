@@ -75,9 +75,15 @@ export default class SequelizeParser {
 							tableOptions.properties.push(indexOptions.properties[0]);
 							break;
 
-						case "name":
 						case "getters":
+							this.objPropParser.childrenToNamedOptions(child, tableOptions, optionalTableOptions, "getterMethods", true);
+							break;
+
 						case "setters":
+							this.objPropParser.childrenToNamedOptions(child, tableOptions, optionalTableOptions, "setterMethods", true);
+							break;
+
+						case "name":
 						case "validate":
 						case "scopes":
 							this.objPropParser.childrenToNamedOptions(child, tableOptions, optionalTableOptions, argName, true);

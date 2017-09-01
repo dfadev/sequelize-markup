@@ -3,7 +3,7 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING(60)
   }
 }, {
-  setters: {
+  setterMethods: {
     setFunName(val) {
       this.setDataValue('name', 'Fun' + val);
     }
