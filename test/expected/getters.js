@@ -4,7 +4,7 @@ const User = sequelize.define('User', {
   }
 }, {
   getters: {
-    function getTwoName() {
+    getTwoName() {
       return this.getDataValue('name') + " " + this.getDataValue('name');
     }
 

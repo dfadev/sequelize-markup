@@ -3,11 +3,11 @@ const User = sequelize.define('User', {
     unique: true,
     type: DataTypes.STRING(60),
 
-    function get() {
+    get() {
       return this.getDataValue('name');
     },
 
-    function set(val) {
+    set(val) {
       this.setDataValue('name', val);
     },
 
@@ -17,7 +17,7 @@ const User = sequelize.define('User', {
         msg: 'name can\'t be null'
       },
 
-      function isEven(val) {
+      isEven(val) {
         throw new Error('Bad validation');
       },
 

@@ -4,7 +4,7 @@ const User = sequelize.define('User', {
   }
 }, {
   setters: {
-    function setFunName(val) {
+    setFunName(val) {
       this.setDataValue('name', 'Fun' + val);
     }
 

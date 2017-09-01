@@ -68,7 +68,7 @@ export default class SequelizeParser {
 							let indexOptions = t.objectExpression([]);
 							let optionalIndexOptions = [];
 
-							this.objPropParser.childrenToNamedOptions(child, indexOptions, optionalIndexOptions, argName, true);
+							this.objPropParser.childrenToNamedOptions(child, indexOptions, optionalIndexOptions, argName, false);
 
 							var rslt = this.indexTemplate( { INDEX: indexOptions.properties[0].value } );
 							indexOptions.properties[0].value = rslt.expression;

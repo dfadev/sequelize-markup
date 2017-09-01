@@ -4,7 +4,7 @@ const User = sequelize.define("User", {
   }
 }, {
   validate: {
-    function namesAreOk() {
+    namesAreOk() {
       if (this.name == "Sam") throw new Error("Invalid name");
     }
 
